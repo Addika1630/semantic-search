@@ -15,6 +15,8 @@ import pandas as pd
 import streamlit as st
 from pinecone import Pinecone
 import logging
+from dotenv import load_dotenv
+import os
 
 from datetime import datetime
 from typing import Optional
@@ -24,12 +26,12 @@ def load_environment_vars() -> dict:
     """Load required environment variables. Raise an exception if any are missing."""
 
     # Uncomment below if loading from .env
-    # load_dotenv()
+    load_dotenv()
     # openapi_key = os.getenv("OPENAI_API_KEY")
     # weaviate_url = os.getenv("WEAVIATE_URL")
     # weaviate_api_key = os.getenv("WEAVIATE_API_KEY")
 
-    pinecone_api_key = "YOUR PINECONE API KEY"
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_environment = "us-east-1"
 
     if not pinecone_api_key:

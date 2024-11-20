@@ -9,7 +9,7 @@ import os
 def load_environment_vars() -> dict:
     """Load required environment variables. Raise an exception if any are missing."""
 
-    pinecone_api_key = "YOUR PINECONE API KEY"
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_environment = "us-east-1"
 
     if not pinecone_api_key:

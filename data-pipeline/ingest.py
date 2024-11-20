@@ -14,10 +14,10 @@ STORE_PATH = "data-pipeline"
 def load_environment_vars() -> dict:
     """Load required environment variables. Raise an exception if any are missing."""
 
-    # load_dotenv()
+    load_dotenv()
     # github_token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
     
-    github_token = "YOUR GITHUB TOKEN"
+    github_token = os.getenv("GITHUB TOKEN")
 
     if not github_token:
         raise EnvironmentError(
