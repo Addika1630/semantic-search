@@ -145,9 +145,5 @@ Demo Web App deployed to [Streamlit Cloud](https://streamlit.io/cloud) and avail
 ## 📚 References
 
 - [Langchain Document Loaders - Github](https://js.langchain.com/docs/modules/data_connection/document_loaders/integrations/web_loaders/github)
-- [Weaviate Vector Search](https://weaviate.io/developers/weaviate/search/similarity)
-- [Weaviate BM25 Search](https://weaviate.io/developers/weaviate/search/bm25)
-- [Weaviate Hybrid Search](https://weaviate.io/developers/weaviate/search/hybrid)
-- [Weaviate Schema Configuration](https://weaviate.io/developers/weaviate/configuration/schema-configuration)
-- [Weaviate - How to efficiently add data objects and cross-references to Weaviate](https://weaviate.io/developers/weaviate/manage-data/import)
-- [Get Started with Streamlit Cloud](https://docs.streamlit.io/streamlit-community-cloud/get-started)
+- [Pinecone Vector Search](https://www.kdnuggets.com/a-comprehensive-guide-to-pinecone-vector-databases)
+- [Cosine Similarity Search](https://www.pinecone.io/learn/what-is-similarity-search/)
