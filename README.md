@@ -56,9 +56,9 @@ try:
         raise
 ```
 
-- **Searching with Weaviate**: Our App supports:
+- **Searching with Pinecone**: Our App supports:
 
-[Cosine-Similarity-Vector-Search]:
+***Cosine-Similarity-Vector-Search***:
 
 ```python
 @st.cache_data
