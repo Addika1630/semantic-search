@@ -3,7 +3,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/dcarpintero/github-semantic-search/badge)](https://www.codefactor.io/repository/github/dcarpintero/github-semantic-search)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://github.com/dcarpintero/st-newsapi-connector/blob/main/LICENSE)
 
-# 🦜 Semantic Search on Langchain Github Issues with Weaviate 🔍
+# 🦜 Semantic Search on Langchain Github Issues with Pinecone 🔍
 
 <p align="center">
   <img src="./static/github-semantic-search.png">
@@ -15,150 +15,91 @@
 
 ## 📋 How does it work?
 
-- **Ingesting Github Issues**: We use the [Langchain Github Loader](https://js.langchain.com/docs/modules/data_connection/document_loaders/integrations/web_loaders/github)  to connect to the [Langchain Repository](http://github.com/langchain-ai/langchain) and fetch the GitHub issues (nearly 2.000), which are then converted to a pandas dataframe and stored in a pickle file. See [./data-pipeline/ingest.py](./data-pipeline/ingest.py).
+- **Ingesting Github Issues**: We use the [Langchain Github Loader](https://js.langchain.com/docs/modules/data_connection/document_loaders/integrations/web_loaders/github)  to connect to the [Langchain Repository](http://github.com/langchain-ai/langchain) and fetch the GitHub issues (nearly 500), which are then converted to a pandas dataframe and stored in a pickle file. See [./data-pipeline/ingest.py](./data-pipeline/ingest.py).
 
-- **Generate and Index Vector Embeddings with Weaviate**: Weaviate generates vector embeddings at the object level (rather than for individual properties), it includes by default properties that use the text data type, in our case we skip the 'url' field (which will be also not filterable and not searchable) and set up the 'text2vec-openai' vectorizer. Given that our use case values fast queries over loading time, we have opted for the [HNSW](https://arxiv.org/abs/1603.09320) vector index type, which incrementally builds a multi-layer structure consisting from hierarchical set of proximity graphs (layers).
+- **Generate and Index Vector Embeddings with Pinecone**: Pinecone generates vector embeddings at the object level (rather than for individual properties), it includes by default properties that use the text data type, in our case we skip the 'url' field (which will be also not filterable and not searchable) and set up the 'Hugging face' vectorizer. Given that our use case values fast queries over loading time, we have opted for the [HNSW](https://arxiv.org/abs/1603.09320) vector index type, which incrementally builds a multi-layer structure consisting from hierarchical set of proximity graphs (layers).
 
-```python
-class_obj = {
-        "class": "GitHubIssue",
-        "description": "This class contains GitHub Issues from the langchain repository.",
-        "vectorIndexType": "hnsw",
-        "vectorizer": "text2vec-openai",
-        "moduleConfig": {
-            "text2vec-openai": {
-                "model": "ada",
-                "modelVersion": "002",
-                "type": "text"
-            }
-        },
-        "properties": [
-            {
-                "name": "title",
-                "dataType": ["text"]
-            },
-            {
-                "name": "url",
-                "dataType": ["text"],
-                "indexFilterable": False,  
-                "indexSearchable": False,
-                "vectorizePropertyName": False
-            },
-            {
-                "name": "description",
-                "dataType": ["text"]
-            },
-            {
-                "name": "creator",
-                "dataType": ["text"],
-            },
-            {
-                "name": "created_at",
-                "dataType": ["date"]
-            },
-            {
-                "name": "state",
-                "dataType": ["text"],
-            },
-        ]
-    }
-```
 
 The ingestion follows in batches of 100 records:
 
 ```python
-with client.batch as batch: 
-    batch.batch_size = 100
-    for item in df.itertuples():
-        properties = {
-            "title": item.title,
-            "url": item.url,
-            "labels": item.labels,
-            "description": item.description,
-            "creator": item.creator,
-            "created_at": item.created_at,
-            "state": item.state,
-        }
+try:
+        # Batch upload vectors
+        batch_size = 100  # Adjust batch size to fit within 4MB limit
+        vectors = []
+        for item in df.itertuples():
+            vector_id = item.url
+            vector = item.embedding
+            metadata = {
+                "title": item.title,
+                "description": item.description,
+                "url": item.url,
+                "labels": item.labels,
+                "state": item.state,
+                "creator": item.creator,
+                "created_at": item.created_at,
+            }
+            vectors.append({"id": vector_id, "values": vector, "metadata": metadata})
 
-        batch.add_data_object(
-            data_object=properties, 
-            class_name="GitHubIssue")
+            # If batch size is reached, upsert to Pinecone
+            if len(vectors) >= batch_size:
+                index.upsert(vectors)
+                vectors = []  # Reset batch
+
+        # Upsert remaining vectors if any
+        if vectors:
+            index.upsert(vectors)
+
+        logging.info("Data successfully indexed.")
+    except Exception as ex:
+        logging.error(f"Unexpected Error: {ex}")
+        raise
 ```
 
 - **Searching with Weaviate**: Our App supports:
 
-[Near-Text-Vector-Search](https://weaviate.io/developers/weaviate/search/similarity):
+[Cosine-Similarity-Vector-Search]:
 
 ```python
 @st.cache_data
-def query_with_near_text(_w_client: weaviate.Client, query, max_results=10) -> pd.DataFrame:
+def query_with_pinecone(_pc_client: Pinecone, query, index_name, embed_model, max_results=10) -> pd.DataFrame:
     """
-    Search GitHub Issues in Weaviate with Near Text.
-    Weaviate converts the input query into a vector through the inference API (OpenAI) and uses that vector as the basis for a vector search.
+    Search GitHub Issues in Pinecone with vector similarity (Cosine/Euclidean).
     """
-
-    response = (
-        _w_client.query
-        .get("GitHubIssue", ["title", "url", "labels", "description", "created_at", "state"])
-        .with_near_text({"concepts": [query]})
-        .with_limit(max_results)
-        .do()
+    embed_model = LangchainEmbedding(
+        HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     )
 
-    data = response["data"]["Get"]["GitHubIssue"]
-    return  pd.DataFrame.from_dict(data, orient='columns')
-```
+    # Convert the query into an embedding vector
+    query_vector = embed_model.get_text_embedding(query)
 
-[BM25-Search](https://weaviate.io/developers/weaviate/search/bm25):
+    # Perform the similarity search in Pinecone
+    index = _pc_client  # Access the Pinecone index
+    response = index.query(vector=query_vector, top_k=max_results, include_metadata=True)
 
-```python
-@st.cache_data
-def query_with_bm25(_w_client: weaviate.Client, query, max_results=10) -> pd.DataFrame:
-    """
-    Search GitHub Issues in Weaviate with BM25.
-    Keyword (also called a sparse vector search) search that looks for objects that contain the search terms in their properties according to 
-    the selected tokenization. The results are scored according to the BM25F function. It is .
-    """
+    # Format the response into a DataFrame
+    data = []
+    for match in response["matches"]:
+        data.append(
+            {
+                "title": match["metadata"]["title"],
+                "url": match["metadata"]["url"],
+                "labels": match["metadata"]["labels"],
+                "description": match["metadata"]["description"],
+                "created_at": match["metadata"]["created_at"],
+                "state": match["metadata"]["state"],
+                "score": match["score"],
+            }
+        )
 
-    response = (
-        _w_client.query
-        .get("GitHubIssue", ["title", "url", "labels", "description", "created_at", "state"])
-        .with_bm25(query=query)
-        .with_limit(max_results)
-        .with_additional("score")
-        .do()
-    )
-
-    data = response["data"]["Get"]["GitHubIssue"]
-    return  pd.DataFrame.from_dict(data, orient='columns')
-```
-
-[Hybrid-Search](https://weaviate.io/developers/weaviate/search/hybrid):
-
-```python
-@st.cache_data
-def query_with_hybrid(_w_client: weaviate.Client, query, max_results=10) -> pd.DataFrame:
-    """
-    Search GitHub Issues in Weaviate with BM25.
-    Keyword (also called a sparse vector search) search that looks for objects that contain the search terms in their properties according to 
-    the selected tokenization. The results are scored according to the BM25F function. It is .
-    """
-
-    response = (
-        _w_client.query
-        .get("GitHubIssue", ["title", "url", "labels", "description", "created_at", "state"])
-        .with_hybrid(query=query)
-        .with_limit(max_results)
-        .with_additional(["score"])
-        .do()
-    )
+    return pd.DataFrame.from_dict(data, orient="columns")
 ```
 
 ## 🚀 Quickstart
 
 1. Clone the repository:
 ```
-git@github.com:dcarpintero/github-semantic-search.git
+git clone https://github.com/Addika1630/semantic-search.git
 ```
 
 2. Create and Activate a Virtual Environment:
