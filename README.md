@@ -6,7 +6,7 @@
 # 🦜 Semantic Search on Langchain Github Issues with Pinecone 🔍
 
 <p align="center">
-  <img src="./static/github-semantic-search.png">
+  <img src="./static/semantic-search.JPG">
 </p>
 
 ##  🔍 What's Semantic Search?
