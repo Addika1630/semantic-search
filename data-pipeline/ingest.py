@@ -17,7 +17,7 @@ def load_environment_vars() -> dict:
     # load_dotenv()
     # github_token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
     
-    github_token = "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"
+    github_token = "YOUR GITHUB TOKEN"
 
     if not github_token:
         raise EnvironmentError(
