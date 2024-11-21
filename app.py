@@ -166,7 +166,7 @@ if query:
                 score = issue["score"]
 
                 if score >= 0.4:
-                    st.markdown(f"[{title}]({url}) ({createdAt}) ({score})")
+                    st.markdown(f"[{title}]({url}) ({createdAt})")
 
     with tab_raw:
         if df is None:
