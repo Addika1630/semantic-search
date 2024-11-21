@@ -163,8 +163,10 @@ if query:
                 title = issue["title"]
                 url = issue["url"]
                 createdAt = format_date(issue["created_at"])
+                score = issue["score"]
 
-                st.markdown(f"[{title}]({url}) ({createdAt})")
+                if score >= 0.4:
+                    st.markdown(f"[{title}]({url}) ({createdAt}) ({score})")
 
     with tab_raw:
         if df is None:
