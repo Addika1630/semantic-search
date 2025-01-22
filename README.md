@@ -148,4 +148,3 @@ Demo Web App deployed to [Streamlit Cloud](https://streamlit.io/cloud) and avail
 - [Pinecone Vector Search](https://www.kdnuggets.com/a-comprehensive-guide-to-pinecone-vector-databases)
 - [Cosine Similarity Search](https://www.pinecone.io/learn/what-is-similarity-search/)
 
-
