@@ -5,9 +5,6 @@ import logging
 from langchain.document_loaders import GitHubIssuesLoader
 from dotenv import load_dotenv
 
-
-
-
 GITHUB_REPOSITORY = "langchain-ai/langchain"
 GITHUB_LABEL = "langchain"
 STORE_PATH = "data-pipeline"
