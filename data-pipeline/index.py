@@ -6,6 +6,7 @@ from llama_index.legacy.embeddings.langchain import LangchainEmbedding
 import os
 
 
+
 def load_environment_vars() -> dict:
     """Load required environment variables. Raise an exception if any are missing."""
 
