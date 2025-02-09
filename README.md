@@ -5,6 +5,7 @@
 
 
 
+
 # 🦜 Semantic Search on Langchain Github Issues with Pinecone 🔍
 
 <p align="center">
