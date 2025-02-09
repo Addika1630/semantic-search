@@ -3,9 +3,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/dcarpintero/github-semantic-search/badge)](https://www.codefactor.io/repository/github/dcarpintero/github-semantic-search)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://github.com/dcarpintero/st-newsapi-connector/blob/main/LICENSE)
 
-
-
-
 # 🦜 Semantic Search on Langchain Github Issues with Pinecone 🔍
 
 <p align="center">
