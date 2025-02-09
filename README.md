@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://github.com/dcarpintero/st-newsapi-connector/blob/main/LICENSE)
 
 
+
 # 🦜 Semantic Search on Langchain Github Issues with Pinecone 🔍
 
 <p align="center">
